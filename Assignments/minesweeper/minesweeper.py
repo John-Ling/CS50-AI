@@ -220,7 +220,8 @@ class MinesweeperAI():
         neighbors = self.get_neighbors(cell)
         for neighbor in neighbors:
             # Remove confirmed mines from the new sentence we only want cells whose status is undetermined
-            if neighbor in self.mines: count -= 1
+            if neighbor in self.mines: 
+                count -= 1
             
             if neighbor not in self.safes and neighbor not in self.mines:
                 cells.add(neighbor)
