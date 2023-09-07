@@ -3,6 +3,7 @@ import random
 import re
 import sys
 import copy
+from decimal import Decimal
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -65,18 +66,17 @@ def transition_model(corpus, page, damping_factor):
     if linkCount == 0:
         # Divide probability evenly
         value = 1 / len(corpus)
-        for page_ in distribution:
+        for page_ in corpus:
             distribution[page_] = value
-
         return distribution
 
     # With probability 1 - damping_factor random surfer should choose one of all pages in corpus with equal probability
-    startingValue = (1 - damping_factor) / len(corpus)
+    startingValue = (1 - Decimal(str(damping_factor))) / len(corpus)
     for page_ in corpus:
         distribution[page_] = startingValue
     
     # Divide damping_factor amongst all other pages linked to page
-    value = damping_factor / linkCount
+    value = Decimal(str(damping_factor)) / linkCount
     for page_ in corpus[page]:
         distribution[page_] += value
 
@@ -84,38 +84,11 @@ def transition_model(corpus, page, damping_factor):
 
 
 def sample_pagerank(corpus, damping_factor, n):
-    """
-    Return PageRank values for each page by sampling `n` pages
-    according to transition model, starting with a page at random.
-
-    Return a dictionary where keys are page names, and values are
-    their estimated PageRank value (a value between 0 and 1). All
-    PageRank values should sum to 1.
-
-    Implementation Ideas and Details:
-    Page Rank =  the proportion of all the samples that corresponded to that page
-
-    function sample_pagerank(corpus, dampingFactor, n)
-        create list of all pages
-        create dict of all pages with values set to 0
-        generate random page from the list and remove it 
-        while samples still left
-            call transition_model() with the previous sample
-            create random value between 0 and 1
-            match random value to the correct page generated through transition model to a sample
-            add 1 to that corresponding page
-            remove sample from list
-        endwhile
-        
-        perform maths stuff on dict to normalise values and make them add to 1
-    endfunction
-    """
-
     if n < 0: raise RuntimeError
 
-    pageRanks = { page: 0.0 for page in corpus }
+    pageRanks = { page: Decimal("0.0") for page in corpus }
 
-    currentSample = random.choice(list(corpus))
+    currentSample = random.choice(list(corpus.keys()))
     pageRanks[currentSample] += 1
     
     for _ in range(n - 1):
@@ -126,9 +99,9 @@ def sample_pagerank(corpus, damping_factor, n):
         currentSample = nextPage
 
     for page in pageRanks: # Normalise values
-        pageRanks[page] = pageRanks[page] /  n
+        pageRanks[page] = Decimal(str(pageRanks[page])) /  n
     
-    assert sum(pageRanks.values()) == 1
+    assert sum(pageRanks.values()) == Decimal("1.0")
 
     return pageRanks
 
@@ -140,38 +113,11 @@ def iterate_pagerank(corpus, damping_factor):
     Return a dictionary where keys are page names, and values are
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
-
-    function iterate_pagerank(corpus, dampingFactor)
-        create dict for page ranks
-        create identical dict called previous
-        set each page's page rank to 1 / N where N is the total number of pages in in corpus
-
-        while significantDifference == true
-            create dict buffer
-            for page in corpus
-                pageRank of page = (1 - dampingFactor) / N + dampingFactor * sigma function(probabilitie of page i in previous / num_links(i))
-                write value to buffer
-            next page
-
-            dict = deep copy of buffer
-
-            if all values in dict and previous have a difference of 0.001 then
-                significantDifference = false
-            endif
-            previous = dict
-        endwhile
-
-    endfunction
-
-    For each item in the corpus they should have a calculated page rank value
-    which is formed using (1 - d) / N + d * the total of PR(i) / NumLinks(i) where
-    i refers to the pages that link to the page you want to know the page rank of
-
     """
 
     pageCount = len(corpus)
-    pageRanks = { page: 1 / pageCount for page in corpus }
-    previousRanks = { page: 1 / pageCount for page in corpus }
+    pageRanks = { page: Decimal(str(1 / pageCount)) for page in corpus }
+    previousRanks = copy.deepcopy(pageRanks)
 
     # is only false when the difference between elements in pageRanks and previousRanks are all within 0.001
     significantDifference = True
@@ -183,24 +129,23 @@ def iterate_pagerank(corpus, damping_factor):
             for page_ in corpus:
                 # find number of links on page    
                 linkCount = len(corpus[page_])
-                if linkCount == 0: # if a page has no links at all
-                    linkCount = pageCount
 
-                # Check if page_ links to page if so we include it
-                if page in corpus[page_] and page != page_:
-                    summation += previousRanks[page_] / linkCount
+                if linkCount == 0: # if a page has no links at all
+                    summation += Decimal(str(previousRanks[page_])) / pageCount
+                elif page in corpus[page_]: # Check if page_ links to page if so we include it
+                    summation += Decimal(str(previousRanks[page_])) / linkCount
             
-            pageRanks[page] = (1 - damping_factor) / pageCount + damping_factor * summation
+            pageRanks[page] = (1 - Decimal(str(damping_factor))) / pageCount + Decimal(str(damping_factor)) * summation
 
         significantDifference = False
         for page in corpus:
-            if abs(pageRanks[page] - previousRanks[page]) > 0.001:
+            if abs(previousRanks[page] - pageRanks[page]) > Decimal("0.001"):
                 significantDifference = True
                 break
         
         previousRanks = copy.deepcopy(pageRanks)
 
-    assert sum(pageRanks.values()) == 1
+    assert sum(pageRanks.values()) == Decimal("1.0")
 
     return pageRanks
 

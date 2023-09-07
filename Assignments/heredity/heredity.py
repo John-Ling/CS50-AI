@@ -2,8 +2,6 @@ import csv
 import itertools
 import sys
 
-from decimal import Decimal
-
 PROBS = {
 
     # Unconditional probabilities for having gene
@@ -131,110 +129,7 @@ def powerset(s):
 
 
 def joint_probability(people, one_gene, two_genes, have_trait):
-    """
-    Compute and return a joint probability.
-
-    The probability returned should be the probability that
-        * everyone in set `one_gene` has one copy of the gene, and
-        * everyone in set `two_genes` has two copies of the gene, and
-        * everyone not in `one_gene` or `two_gene` does not have the gene, and
-        * everyone in set `have_trait` has the trait, and
-        * everyone not in set` have_trait` does not have the trait.    
-    
-    Each parent passes 1 of their two genes onto the child
-    so if child has 2 genes then either both parents have the gene or both parents don't have the gene but mutated
-    if child hs 1 gene then either mum has gene and not dad or dad has gene and not mum
-        
-    Potential Pseudocode 
-
-    function joint_probability(people, oneGene, twoGenes, haveTrait)
-        joinProbability = None
-        create set or array that consists of oneGene and twoGenes
-        create dict containing names of all in people set their values to None
-        create another dict, remaining, which is a deep copy of the above dict, names will be removed and what remains are people outside of the argument sets
-
-        // Iterate through each set and adjust probabilities
-
-        for set in set containing oneGene and twoGenes
-            for person in set
-                n = 1 or 2 depending on which set we're on
-                if person has no parents
-                    if their probability is none
-                        set their probability to probability of n gene from PROBS
-                    else
-                        multiply their existing probability by that of n gene from PROBS
-                    endif
-                else // person has parents
-                    // perform parent gene inheritence calculation stuff
-                endif
-
-                multiply their existing probability by that of trait (depending when it is true or false and how many genes they have)
-
-                if joinProbability is None
-                    set joinProbability to result
-                else
-                    multiple joinProbability by result
-                endif
-
-                remove person from remaining
-            next person
-        next set
-
-        // people in remaining do not have any copies of the gene
-        for person in remaining
-            if their probability is none
-                set their probability to probability of 0 genes (PROBS["gene"][0])
-            endif
-            multiply their existing probability by that of trait given that they have 0 genes and taking into account the value of the boolean value
-
-            if jointProbability is None
-                set jointProbability to result
-            else
-                multiple jointProbability by result
-            endif
-        next person
-
-        for person in dict containing probabilities
-            multiply probabilities together
-        next person
-
-        return result
-    endfunction
-
-    Pseudocode for handling parents
-
-    // mutationFactor is the "mutation" in PROBS
-    geneDict = {2: 1, 1: 0.5, 0: mutationFactor}
-    motherProbability = geneDict[mother gene count]
-    fatherProbability = geneDict[father gene count]
-
-    if mother gene count != 0
-        motherProbability -= mutationFactor
-    endif
-
-    if father gene count != 0
-        fatherProbability -= mutationFactor
-    endif
-
-    if child is known to have 2 genes
-        // Either both mum and dad have 1-2 genes or neither of them have genes but they both passed mutated genes
-        probability = fatherProbability * motherProbability + mutationFactor squared
-    else if child is known to have 1 gene
-        inverseGeneDict = {2: mutationFactor, 1: 0.5 + mutationFactor, 0: mutationFactor}
-        fatherInverseProbability = inverseGeneDict[father gene count]
-        motherInverseProbability = inverseGeneDict[mother gene count]
-        // Either dad has gene and mum does not or mum has gene and dad does not
-        
-        probability = fatherProbabiliy * motherInverseProbability + fatherInverseProbability * motherProbability
-    endif
-            
-    """
     jointProbability = 1
-    # print(f"People {people}")
-    # print(f"One Gene {one_gene}")
-    # print(f"Two Genes {two_genes}")
-    # print(f"Have trait {have_trait}")
-
     remaining = [name for name in people]
     geneCount = 1 
 
@@ -300,48 +195,17 @@ def handle_parents(child, childGeneCount, oneGene, twoGenes):
     fatherProbability = PROBS["mutation"] if fatherGeneCount == 0 else geneDict[fatherGeneCount]
     
     if childGeneCount == 2:
-            probability = fatherProbability * motherProbability
+        probability = fatherProbability * motherProbability
     elif childGeneCount == 1:
         motherInverseProbability = 1 - motherProbability
         fatherInverseProbability = 1 - fatherProbability
         probability = fatherProbability * motherInverseProbability + fatherInverseProbability * motherProbability
     else:
-        motherInverseProbability = 1 - motherProbability
-        fatherInverseProbability = 1 - fatherProbability
-
-        probability = motherInverseProbability * fatherInverseProbability
+        probability = (1 - motherProbability) * (1 - fatherProbability)
 
     return probability
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
-    """
-    Add to `probabilities` a new joint probability `p`.
-    Each person should have their "gene" and "trait" distributions updated.
-    Which value for each distribution is updated depends on whether
-    the person is in `have_gene` and `have_trait`, respectively.
-
-    function update(probabilities, oneGene, twoGenes, haveTrait, p)
-
-        for person in probabilities
-            if person in oneGene
-                add p to probabilities[person]["gene"][1]
-            else if person in twoGenes
-                add p to probabilities[person]["gene"][2]
-            else
-                add p to probabilities[person]["gene"][0]
-            endif
-
-            if person in haveTrait
-                add p to probabilities[person]["trait"][true]
-            else
-                add p to probabilities[person]["trait"][false]
-            endif
-            
-            return
-        next person
-    endfunction
-
-    """
     for person in probabilities:
         geneCount = 0
 
@@ -360,25 +224,7 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
 
     return
 
-def normalize(probabilities):
-    """
-    Update `probabilities` such that each probability distribution
-    is normalized (i.e., sums to 1, with relative proportions the same).
-
-    for person in probabilities
-        geneSum = total of all gene probabilities for that person
-        traitSum = total of all trait probabilities for that person
-
-        for gene in geneSet
-            set value to gene / geneSum
-        next gene
-
-        for trait in traitSet
-            set value to trait / traitSum
-        next trait
-    next person
-    """
-    
+def normalize(probabilities):    
     for person in probabilities:
         geneSum = sum(probabilities[person]["gene"].values())
         traitSum = sum(probabilities[person]["trait"].values())

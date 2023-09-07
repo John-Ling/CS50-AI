@@ -1,0 +1,109 @@
+function enforce_node_consistency()
+    for variable in domains
+        for word in domains[variable]
+            if length of word does not match length of variable
+                remove word
+            endif
+        next word
+    next variable
+    return
+endfunction
+
+function revise(X, Y)
+    overlap = crossword.overlaps[X, Y]
+    if crossword.overlaps[X, Y] is None return false
+    revision = false
+    ith = overlap[0]
+    jth = overlap[1]
+
+    newDomain = set()
+    for wordX in self.domains[X]
+        for wordY in self.domains[Y]
+            if wordX[ith] == wordY[jth]
+                newDomain.add(wordX)
+                revision = true
+            endif
+        next wordY
+    next wordX
+
+    if revision
+        self.domains[X] = newDomain
+    endif
+    return revision    
+endfunction
+
+function ac3(arcs)
+    if arcs is None
+        // find all arcs in problem and create list
+    endif
+
+    queue = deque(arcs)
+
+    while len(queue) != 0
+        (x, y) = queue.popleft()
+        if revise(x, y)
+            if len(self.domain[x]) == 0
+                return false
+            endif
+
+            for z in crossword.neighbors(x) - {y}
+                queue.append((z, x))
+            next z
+        endif
+    endwhile
+    return true
+endfunction
+
+function assignment_complete(assignment)
+    for key in assignment
+        if assignment[key] is not a string
+            return false
+        endif
+    next key
+    return true
+endfunction
+
+function consistent(assignment)
+    words = {}
+    for variable in assignment
+        word = assignment[variable]
+
+        // check if word is not distinct
+        if word in words
+            return false
+        endif
+
+        // ensure if word is the correct length
+        if variable.length != len(word)
+            return false
+        endif
+
+        // check for conflicts between neighboring variables
+        for neighbor in neighbors(variable)
+            ith, jth = overlap[word, neighbor]
+            if word[ith] != neighbor[jth]
+                return false
+            endif
+        next neighbor
+    next variable
+    return true
+endfunction
+
+function order_domain_values(var, assignment)
+    neighbors = neighbors(var)
+    x = get subset of neighbors and variables in assignment
+    ordered = {}
+    for value in self.domains[var]
+        count = 0
+        for variable in x
+            ith, jth = overlap of variable and x
+            if value[ith] != x[jth]
+                count++
+        ordered[variable] = count
+    
+    sort ordered
+    return ordered.values()
+
+// Simple implementation
+function order_domain_values(var, assignment)
+    return self.domains[var]
