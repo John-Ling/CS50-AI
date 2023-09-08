@@ -1,5 +1,6 @@
 import sys
 import random
+import copy
 from collections import deque
 from crossword import *
 
@@ -119,13 +120,12 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        overlap = self.crossword.overlaps[x, y]
-        if overlap is None: 
+
+        if self.crossword.overlaps[x, y] is None:
             return False
 
+        ith, jth = self.crossword.overlaps[x, y]
         revision = False
-        ith = overlap[0]
-        jth = overlap[1]
 
         newDomain = set()
         for wordX in self.domains[x]:
@@ -244,17 +244,22 @@ class CrosswordCreator():
             return assignment
 
         variable = self.select_unassigned_variable(assignment)
+
+        originalDomain = copy.deepcopy(self.domains)
         for value in self.order_domain_values(variable, assignment):
             # check if value is consistent with assignment
             assignment[variable] = value
             if self.consistent(assignment):
-                # self.ac3(arcs=self.crossword.neighbors(variable))
+                arcs = [(variable, neighbor) for neighbor in self.crossword.neighbors(variable)]
+                self.ac3(arcs=arcs) # run maintaining arc consistency algorithm
                 
                 result = self.backtrack(assignment)
                 if result is not None:
                     return result
 
             del assignment[variable]
+            # Remove inferences made by AC-3 by reverting
+            self.domains = originalDomain
 
         return None
 
