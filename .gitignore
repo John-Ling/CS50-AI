@@ -4,3 +4,4 @@ Include/
 Lib/
 pyvenv.cfg
 test.*
+Assignments/*.zip
