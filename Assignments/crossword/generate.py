@@ -91,9 +91,13 @@ class CrosswordCreator():
         """
         Enforce node and arc consistency, and then solve the CSP.
         """
+        timeStart = time.perf_counter()
         self.enforce_node_consistency()
         self.ac3()
-        return self.backtrack(dict())
+        assignment = self.backtrack(dict())
+        timeStop = time.perf_counter()
+        print(f"Elapsed Time: {timeStop - timeStart}")
+        return assignment
 
     def enforce_node_consistency(self):
         """
@@ -306,11 +310,7 @@ class CrosswordCreator():
                 self.domains = originalDomain
 
             return None
-        timeStart = time.perf_counter()
-        x = _backtrack(assignment)
-        timeStop = time.perf_counter()
-        print(f"Elapsed Time: {timeStop - timeStart}")
-        return x
+        return _backtrack(assignment)
 
 def main():
 
