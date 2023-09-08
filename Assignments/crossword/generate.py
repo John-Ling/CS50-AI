@@ -1,4 +1,5 @@
 import sys
+import random
 from collections import deque
 from crossword import *
 
@@ -171,8 +172,6 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-
-
         for variable in self.crossword.variables:
             if variable not in assignment:
                 return False
@@ -195,11 +194,12 @@ class CrosswordCreator():
 
             if variable.length != len(word):
                 return False
-
+            
             for neighbor in self.crossword.neighbors(variable):
-                ith, jth = self.crossword.overlaps[word, neighbor]
-                if word[ith] != neighbor[jth]:
-                    return False
+                ith, jth = self.crossword.overlaps[variable, neighbor]
+                if neighbor in assignment:
+                    if word[ith] != assignment[neighbor][jth]:
+                        return False
 
         return True
 
@@ -211,9 +211,10 @@ class CrosswordCreator():
         that rules out the fewest values among the neighbors of `var`.
         """
 
-        
-
-        return self.domains[var]
+        # go back and implement this with heuristic
+        assignedWords = set((word for word in assignment.values()))
+        domain = self.domains[var] - assignedWords
+        return domain
 
     def select_unassigned_variable(self, assignment):
         """
@@ -224,7 +225,10 @@ class CrosswordCreator():
         return values.
         """
 
-        return 
+        # go back and implement this with heuristic
+        assignedVariables = set((variable for variable in assignment))
+        unassignedVariables = self.crossword.variables - assignedVariables
+        return random.choice(list(unassignedVariables))
 
     def backtrack(self, assignment):
         """
@@ -235,7 +239,24 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
-        raise NotImplementedError
+
+        if self.assignment_complete(assignment):
+            return assignment
+
+        variable = self.select_unassigned_variable(assignment)
+        for value in self.order_domain_values(variable, assignment):
+            # check if value is consistent with assignment
+            assignment[variable] = value
+            if self.consistent(assignment):
+                # self.ac3(arcs=self.crossword.neighbors(variable))
+                
+                result = self.backtrack(assignment)
+                if result is not None:
+                    return result
+
+            del assignment[variable]
+
+        return None
 
 
 def main():
