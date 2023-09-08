@@ -1,6 +1,7 @@
 import sys
 import random
 import copy
+import time
 from collections import deque
 from crossword import *
 
@@ -211,10 +212,25 @@ class CrosswordCreator():
         that rules out the fewest values among the neighbors of `var`.
         """
 
-        # go back and implement this with heuristic
-        assignedWords = set((word for word in assignment.values()))
-        domain = self.domains[var] - assignedWords
-        return domain
+        neighbors = self.crossword.neighbors(var)
+        assignedWords = set((assignment.values()))
+        unassignedNeighbors = neighbors - assignedWords
+
+        ordered = {}
+        for value in self.domains[var]:
+            ruledOut = 0
+
+            for neighbor in unassignedNeighbors:
+                ith, jth = self.crossword.overlaps[var, neighbor]
+                for word in self.domains[neighbor]:
+                    if value[ith] != word[jth]:
+                        ruledOut += 1
+
+            ordered[value] = ruledOut
+        
+        ordered = sorted(ordered.items(), key=lambda item: item[1])
+        return dict(ordered).keys()
+
 
     def select_unassigned_variable(self, assignment):
         """
@@ -226,9 +242,34 @@ class CrosswordCreator():
         """
 
         # go back and implement this with heuristic
-        assignedVariables = set((variable for variable in assignment))
-        unassignedVariables = self.crossword.variables - assignedVariables
-        return random.choice(list(unassignedVariables))
+        # assignedVariables = set((variable for variable in assignment))
+        # unassignedVariables = self.crossword.variables - assignedVariables
+        # return random.choice(list(unassignedVariables))
+
+        bestVariable = None
+        minimumRemainingVariable = (None, float("inf"))
+        highestDegreeVariable = (None, -float("inf"))
+
+        unassignedVariables = self.crossword.variables - assignment.keys()
+        
+        for variable in unassignedVariables:
+            # calculate mrv heuristic
+            domainSize = len(self.domains[variable])
+            if domainSize < minimumRemainingVariable[1]:
+                minimumRemainingVariable = (variable, domainSize)
+                bestVariable = variable
+            
+            # calculate degree heuristic
+            degreeCount = len(self.crossword.neighbors(variable))
+            if degreeCount > highestDegreeVariable[1]:
+                highestDegreeVariable = (variable, degreeCount)
+            
+            if domainSize == minimumRemainingVariable[1]:
+                if degreeCount > highestDegreeVariable[1]:
+                    bestVariable = variable
+        
+        assert bestVariable is not None
+        return bestVariable
 
     def backtrack(self, assignment):
         """
@@ -240,29 +281,37 @@ class CrosswordCreator():
         If no assignment is possible, return None.
         """
 
-        if self.assignment_complete(assignment):
-            return assignment
-
-        variable = self.select_unassigned_variable(assignment)
-
-        originalDomain = copy.deepcopy(self.domains)
-        for value in self.order_domain_values(variable, assignment):
-            # check if value is consistent with assignment
-            assignment[variable] = value
-            if self.consistent(assignment):
-                arcs = [(variable, neighbor) for neighbor in self.crossword.neighbors(variable)]
-                self.ac3(arcs=arcs) # run maintaining arc consistency algorithm
+        def _backtrack(assignment, originalDomain=None):
+            # stop code from constantly making a deep copy on every recursive call
+            if originalDomain is None:
+                originalDomain = copy.deepcopy(self.domains)
                 
-                result = self.backtrack(assignment)
-                if result is not None:
-                    return result
+            if self.assignment_complete(assignment):
+                return assignment
 
-            del assignment[variable]
-            # Remove inferences made by AC-3 by reverting
-            self.domains = originalDomain
+            variable = self.select_unassigned_variable(assignment)
+            for value in self.order_domain_values(variable, assignment):
+                # check if value is consistent with assignment
+                assignment[variable] = value
 
-        return None
+                if self.consistent(assignment):
+                    arcs = [(variable, neighbor) for neighbor in self.crossword.neighbors(variable)]
+                    self.ac3(arcs=arcs) # run maintaining arc consistency algorithm
+                    
+                    result = _backtrack(assignment, originalDomain)
+                    if result is not None:
+                        return result
 
+                del assignment[variable]
+                # Remove inferences made by AC-3 by reverting
+                self.domains = originalDomain
+
+            return None
+        timeStart = time.perf_counter()
+        x = _backtrack(assignment)
+        timeStop = time.perf_counter()
+        print(f"Elapsed Time: {timeStop - timeStart}")
+        return x
 
 def main():
 

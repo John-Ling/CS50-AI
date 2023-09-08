@@ -104,6 +104,35 @@ function order_domain_values(var, assignment)
     sort ordered
     return ordered.values()
 
-// Simple implementation
-function order_domain_values(var, assignment)
-    return self.domains[var]
+function select_unassigned_variable()
+    bestVariable = None
+    minimumRemainingVariable = {}
+    highestDegreeVariable = {}
+
+    smallestDomainSize = infinity
+    highestDegreeCount = -infinity
+
+    unassignedVariables = all variables - assigned variables
+
+    for variable in unassignedVariables
+        // calculate mrv heuristic
+        if number of values in variable's domain < smallestDomainSize
+            smallestDomainSize = number of values in variable's domain
+            minimumRemainingVariable[variable] = number of values in variable's domain
+        
+        // calculate degree heuristic
+        if number of neighbors of variable > highestDegreeCount
+            highestDegreeCount = number of neighbors of variable
+            highestDegreeVariable[variable] = number of neighbors of variable
+        
+        // check for ties
+        if number of values in variable's domain == smallestDomainSize
+            if number of neighbors of variable > highestDegreeCount
+                bestVariable = variable
+            else if number of neighbors of variable == highestDegreeCount
+                bestVariable = random choice between current best and variable
+    
+    if bestVariable is None
+        throw error
+        
+    return bestVariable
