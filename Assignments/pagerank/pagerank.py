@@ -3,6 +3,7 @@ import random
 import re
 import sys
 import copy
+import decimal
 from decimal import Decimal
 
 DAMPING = 0.85
@@ -59,26 +60,32 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    
+
+    DAMPING_FACTOR = Decimal(str(damping_factor))
     distribution = {}
     linkCount = len(corpus[page])
 
     if linkCount == 0:
         # Divide probability evenly
-        value = 1 / len(corpus)
+        value = Decimal(str(1 / len(corpus)))
         for page_ in corpus:
             distribution[page_] = value
         return distribution
 
     # With probability 1 - damping_factor random surfer should choose one of all pages in corpus with equal probability
-    startingValue = (1 - Decimal(str(damping_factor))) / len(corpus)
+    startingValue = Decimal(str(1 - DAMPING_FACTOR)) / len(corpus)
     for page_ in corpus:
         distribution[page_] = startingValue
     
     # Divide damping_factor amongst all other pages linked to page
-    value = Decimal(str(damping_factor)) / linkCount
+    value = Decimal(str(damping_factor / linkCount))
+    # print(value)
     for page_ in corpus[page]:
         distribution[page_] += value
+    
+    # print(distribution)
+    # print(sum(distribution.values()))
+    assert sum(distribution.values()) == 1.0
 
     return distribution
 
@@ -99,8 +106,11 @@ def sample_pagerank(corpus, damping_factor, n):
         currentSample = nextPage
 
     for page in pageRanks: # Normalise values
-        pageRanks[page] = Decimal(str(pageRanks[page])) /  n
+        pageRanks[page] = Decimal(pageRanks[page] /  n)
     
+    print(sum(pageRanks.values()))
+    print(pageRanks)
+
     assert sum(pageRanks.values()) == Decimal("1.0")
 
     return pageRanks
@@ -114,7 +124,7 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-
+    DAMPING_FACTOR = Decimal(str(damping_factor))
     pageCount = len(corpus)
     pageRanks = { page: Decimal(str(1 / pageCount)) for page in corpus }
     previousRanks = copy.deepcopy(pageRanks)
@@ -127,15 +137,15 @@ def iterate_pagerank(corpus, damping_factor):
             # Calculate summation 
             summation = 0
             for page_ in corpus:
-                # find number of links on page    
+                # find number of links on page
                 linkCount = len(corpus[page_])
 
                 if linkCount == 0: # if a page has no links at all
-                    summation += Decimal(str(previousRanks[page_])) / pageCount
+                    summation += Decimal(str(previousRanks[page_] / pageCount))
                 elif page in corpus[page_]: # Check if page_ links to page if so we include it
-                    summation += Decimal(str(previousRanks[page_])) / linkCount
+                    summation += Decimal(str(previousRanks[page_] / linkCount))
             
-            pageRanks[page] = (1 - Decimal(str(damping_factor))) / pageCount + Decimal(str(damping_factor)) * summation
+            pageRanks[page] = (1 - DAMPING_FACTOR) / pageCount + DAMPING_FACTOR * summation
 
         significantDifference = False
         for page in corpus:
@@ -145,6 +155,8 @@ def iterate_pagerank(corpus, damping_factor):
         
         previousRanks = copy.deepcopy(pageRanks)
 
+    print(sum(pageRanks.values()))
+    print(pageRanks)
     assert sum(pageRanks.values()) == Decimal("1.0")
 
     return pageRanks

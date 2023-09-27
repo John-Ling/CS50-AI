@@ -1,0 +1,21 @@
+function load_data(filename)
+    evidence = []
+    labels = []
+    open filename as csv file called file
+    for row in file
+        for data, index in row
+            if data is integer typecast to int
+            else if data is float typecast to float
+            else if data is month add corresponding number
+            else if data is "Returning_Visitor" add 1 otherwise add 0
+            else if data is TRUE or FALSE add 1 or 0 respectively
+
+            if index is not last index
+                add data to evidence
+            else
+                add data to labels
+    return (evidence, labels)
+
+function evaluate(labels, predictions)
+    sensitivity, specificity = 0.0, 0.0
+    for label in labels
