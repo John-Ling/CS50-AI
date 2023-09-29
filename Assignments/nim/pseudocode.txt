@@ -1,0 +1,35 @@
+function get_q_value(state, action)
+    if state action pair not in self.q
+        return 0
+    
+    return self.q[state, action]
+
+function update_q_value(state, action, oldQ, reward, futureRewards)
+    self.q[state, action] = oldQ + self.alpha*(sum - oldQ)
+    return
+
+function best_future_reward(state)
+    actions = available_actions(state)
+    if actions is empty set
+        return 0
+
+    bestPossibleReward = -infinity
+    for action in actions
+        reward = 0
+        if state action pair in self.q
+            reward = self.q[state action pair]
+
+        if reward > bestPossibleReward
+                bestPossibleReward = reward
+    return bestPossibleReward
+
+function choose_action(state, epsilon)
+    actions = { action: 0 for action in available_actions(state) }
+
+    for action in actions
+        actions[action] = get_q_value(state, action)
+
+    if not epsilon
+        return max(actions)
+    
+    return random.choices([actions.keys(), max(actions)], (1 - self.epsilon, self.epsilon))
