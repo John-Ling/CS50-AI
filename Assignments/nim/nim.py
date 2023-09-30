@@ -177,8 +177,13 @@ class NimAI():
                 bestValue = reward
 
         bestActions = [action for action in actions if self.get_q_value(state, action) == bestValue]
+        bestAction = random.choice(list(bestActions))
+        RETURN_VALUES = [random.choice(list(actions)), bestAction]
 
-        return random.choice(list(bestActions))
+        if not epsilon:
+            return bestAction
+
+        return random.choices(RETURN_VALUES, weights=[1 - self.epsilon, self.epsilon], k=1)[0]
 
 def train(n):
     """
