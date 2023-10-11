@@ -21,7 +21,6 @@ def main():
 
     # Get image arrays and labels for all image files
     images, labels = load_data(sys.argv[1])
-
     # Split data into training and testing sets
     labels = tf.keras.utils.to_categorical(labels)
     x_train, x_test, y_train, y_test = train_test_split(
@@ -29,8 +28,9 @@ def main():
     )
 
     # Get a compiled neural network
+    print("Getting model")
     model = get_model()
-
+    print(model)
     # Fit model on training data
     model.fit(x_train, y_train, epochs=EPOCHS)
 
@@ -58,7 +58,25 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-    raise NotImplementedError
+
+    FOLDER_NAME = "gtsrb"
+    images, labels = [], []
+    workingDir = os.getcwd()
+
+    for directory in os.listdir(data_dir):
+        label = int(directory)
+        fileDirectory = os.path.join(workingDir, FOLDER_NAME, directory)
+        for file in os.listdir(fileDirectory):
+            filePath = os.path.join(fileDirectory, file)
+            print(f"Loading {filePath}")
+            image = cv2.imread(filePath)
+            image = cv2.resize(image, (IMG_WIDTH, IMG_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            images.append(image)
+            labels.append(label)
+            
+            assert image.shape == (IMG_WIDTH, IMG_HEIGHT, 3)
+
+    return (images, labels)
 
 
 def get_model():
@@ -67,8 +85,40 @@ def get_model():
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
-    raise NotImplementedError
+    KERNEL_SIZE = 3
+    FILTER_COUNT = 32
+    CHANNEL_COUNT = 3 # change to 1 if using grayscale images
+    POOLING_SIZE = 2
+    DENSE_NODE_COUNT = 128
+    DROPOUT_RATE = 0.5
+    OUTPUT_NODE_COUNT = 43
 
+    model = tf.keras.Sequential([
+        tf.keras.layers.Conv2D(FILTER_COUNT, 
+                               (KERNEL_SIZE, KERNEL_SIZE), 
+                               activation="relu", 
+                               input_shape=(IMG_WIDTH, IMG_HEIGHT, CHANNEL_COUNT)),
+        tf.keras.layers.MaxPooling2D((POOLING_SIZE, POOLING_SIZE)),
+        tf.keras.layers.Conv2D(FILTER_COUNT * 2, 
+                               (KERNEL_SIZE, KERNEL_SIZE),
+                               activation="relu"),
+        tf.keras.layers.MaxPooling2D((POOLING_SIZE, POOLING_SIZE)),
+        tf.keras.layers.Conv2D(FILTER_COUNT * 2, 
+                               (KERNEL_SIZE, KERNEL_SIZE),
+                               activation="relu"),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(DENSE_NODE_COUNT, activation="relu"),
+        tf.keras.layers.Dropout(DROPOUT_RATE),
+        tf.keras.layers.Dense(OUTPUT_NODE_COUNT, activation="softmax")
+    ])
+
+    model.compile(
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+
+    return model
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,14 @@
+function load_data(directory)
+	images, labels = [], []
+
+	SEPARATOR = os.sep
+	workingDir = os.getcwd()
+	
+	for dir, label in enumerate(directory)
+		for file in dir
+			filepath = os.path.join(workingDir, dir, file)
+			read filepath as np.ndarray
+			resize image to IMG_WIDTH and IMG_HEIGHT
+			add image to images
+			add label to labels
+	return (images, labels)
