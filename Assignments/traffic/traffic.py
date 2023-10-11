@@ -91,7 +91,6 @@ def get_model():
     POOLING_SIZE = 2
     DENSE_NODE_COUNT = 128
     DROPOUT_RATE = 0.5
-    OUTPUT_NODE_COUNT = 43
 
     model = tf.keras.Sequential([
         tf.keras.layers.Conv2D(FILTER_COUNT, 
@@ -109,7 +108,7 @@ def get_model():
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(DENSE_NODE_COUNT, activation="relu"),
         tf.keras.layers.Dropout(DROPOUT_RATE),
-        tf.keras.layers.Dense(OUTPUT_NODE_COUNT, activation="softmax")
+        tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
     ])
 
     model.compile(
