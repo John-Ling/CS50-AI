@@ -32,7 +32,7 @@ knowledge0 = And(
 # Since we are both knaves is false then B must be a knight since not BOTH of them are knaves but A is
 # Therefore B is a knight
 
-# Expected answer: A is a knight and B is a knight
+# Expected answer: A is a knave and B is a knight
 
 knowledge1 = And(
     Not(And(AKnight, AKnave)),
@@ -49,12 +49,14 @@ knowledge1 = And(
 
 # If A is a knight then B would be lying (B would also be a knight due to A's statement) which is not possible if B is a knight
 # If A was a knave then B would still be lying but it would be ok since B is a knave
+# if we know B is knave then A is lying when they say we are the same kind becaues knaves always lie
 
 # Expected answer: A and B are knaves
 
 knowledge2 = And(
-    Implication(AKnight, And(AKnight, BKnight)),
-    Implication(AKnave, Not(And(AKnight, BKnight)))
+    Implication(Or(AKnight, AKnave), BKnave), 
+    Implication(And(AKnave, BKnave), AKnave),
+    Implication(Not(And(AKnave, BKnave)), AKnight)
 )
 
 # Puzzle 3

@@ -28,9 +28,8 @@ def main():
     )
 
     # Get a compiled neural network
-    print("Getting model")
     model = get_model()
-    print(model)
+
     # Fit model on training data
     model.fit(x_train, y_train, epochs=EPOCHS)
 
