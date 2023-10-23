@@ -18,7 +18,7 @@ NONTERMINALS = """
 S -> SS | SS Conj S | SS Conj S Adv | SS Conj WS | NP
 SS -> NP VP | NP VP NP | NP VP NP P NP
 WS -> VP NP | VP NP P NP
-NP -> Det ADS N | Det N | Det ADS N P Det N | Det N P Det N | N 
+NP -> Det ADS N | Det N | Det ADS N P NP | Det N P NP | N 
 VP -> Adv V | V Adv | Adv V P | V P | V
 ADS -> Adj ADS | Adj
 """
@@ -87,8 +87,13 @@ def np_chunk(tree):
     whose label is "NP" that does not itself contain any other
     noun phrases as subtrees.
     """
-    raise NotImplementedError
+    nounPhrases = []
+    for subtree in tree.subtrees(lambda t: t.label() == "NP"):
 
+        if sum(1 for child in subtree if child.label() == "NP") == 0:
+            nounPhrases.append(subtree)
+
+    return nounPhrases
 
 if __name__ == "__main__":
     main()
