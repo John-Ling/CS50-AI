@@ -1,0 +1,3 @@
+function visualise_attentions(tokens, attentions)
+	for i in range(number of tokens squared)
+		
