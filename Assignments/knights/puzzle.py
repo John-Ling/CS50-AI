@@ -17,9 +17,9 @@ CKnave = Symbol("C is a Knave")
 # Expected answer: A is a knave
 
 knowledge0 = And(
-    Not(And(AKnight, AKnave)),
-    Implication(And(AKnight, AKnave), AKnight), 
-    Implication(Not(And(AKnight, AKnave)), AKnave) 
+    And(Or(AKnight, AKnave), Not(And(AKnight, AKnave))),
+    Implication(AKnight, And(AKnight, AKnave)),
+    Implication(AKnave, Not(And(AKnight, AKnave)))
 )
 
 # Puzzle 1
@@ -35,28 +35,30 @@ knowledge0 = And(
 # Expected answer: A is a knave and B is a knight
 
 knowledge1 = And(
-    Not(And(AKnight, AKnave)),
-    Not(And(BKnight, BKnave)),
-
-    Implication(And(AKnave, BKnave), AKnight),
-    Implication(Not(And(AKnave, BKnave)), AKnave),
-    Implication(And(AKnave, BKnave), BKnave),
-    Implication(Not(And(AKnave, BKnave)), BKnight)
+    And(Or(AKnight, AKnave), Not(And(AKnight, AKnave))),
+    And(Or(BKnight, BKnave), Not(And(BKnight, BKnave))),
+    Implication(AKnight, And(AKnave, BKnave)),
+    Implication(AKnave, Not(And(AKnave, BKnave)))
 )
+
 # Puzzle 2
 # A says "We are the same kind."
 # B says "We are of different kinds."
 
-# If A is a knight then B would be lying (B would also be a knight due to A's statement) which is not possible if B is a knight
-# If A was a knave then B would still be lying but it would be ok since B is a knave
-# if we know B is knave then A is lying when they say we are the same kind becaues knaves always lie
 
-# Expected answer: A and B are knaves
+# If B is a knight then A must be a knave.
+# If A is a knave then their statement is false which is ok because A always lies
 
+# Expected answer: A is a knave and B is a knight
+
+statement = And(Or(And(AKnight, BKnave), And(AKnave, BKnight)), Not(And(And(AKnight, BKnave), And(AKnave, BKnight))))
 knowledge2 = And(
-    Implication(Or(AKnight, AKnave), BKnave), 
-    Implication(And(AKnave, BKnave), AKnave),
-    Implication(Not(And(AKnave, BKnave)), AKnight)
+    And(Or(AKnight, AKnave), Not(And(AKnight, AKnave))),
+    And(Or(BKnight, BKnave), Not(And(BKnight, BKnave))),
+    Implication(AKnight, Or(And(AKnight, BKnight), And(AKnave, BKnave))),
+    Implication(AKnave, Not(Or(And(AKnight, BKnight), And(AKnave, BKnave)))),
+    Implication(BKnight, statement),
+    Implication(BKnave, Not(statement))
 )
 
 # Puzzle 3
@@ -64,8 +66,24 @@ knowledge2 = And(
 # B says "A said 'I am a knave'."
 # B says "C is a knave."
 # C says "A is a knight."
+
+
+# Expected answer: I don't even know where to start with this one I'll just trust what the computer spits out
+
 knowledge3 = And(
-    # TODO
+    And(Or(AKnight, AKnave), Not(And(AKnight, AKnave))),
+    And(Or(BKnight, BKnave), Not(And(BKnight, BKnave))),
+    And(Or(CKnight, CKnave), Not(And(CKnight, CKnave))),
+
+    Implication(AKnight, Or(AKnight, AKnave)),
+    Implication(AKnave, Not(Or(AKnight, AKnave))),
+
+    Implication(BKnight, CKnave),
+    Implication(BKnave, CKnight),
+    Implication(BKnight, AKnave),
+    Implication(BKnave, AKnight),
+    Implication(CKnight, AKnight),
+    Implication(CKnave, AKnave)
 )
 
 
