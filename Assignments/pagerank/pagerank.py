@@ -3,8 +3,6 @@ import random
 import re
 import sys
 import copy
-import decimal
-from decimal import Decimal
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -61,31 +59,29 @@ def transition_model(corpus, page, damping_factor):
     a link at random chosen from all pages in the corpus.
     """
 
-    DAMPING_FACTOR = Decimal(str(damping_factor))
+    DAMPING_FACTOR = damping_factor
     distribution = {}
     linkCount = len(corpus[page])
 
     if linkCount == 0:
         # Divide probability evenly
-        value = Decimal(str(1 / len(corpus)))
+        value = round(1 / len(corpus), 3)
         for page_ in corpus:
             distribution[page_] = value
         return distribution
 
     # With probability 1 - damping_factor random surfer should choose one of all pages in corpus with equal probability
-    startingValue = Decimal(str(1 - DAMPING_FACTOR)) / len(corpus)
+    startingValue =  round((1 - DAMPING_FACTOR) / len(corpus), 3)
     for page_ in corpus:
         distribution[page_] = startingValue
     
     # Divide damping_factor amongst all other pages linked to page
-    value = Decimal(str(damping_factor / linkCount))
+    value = round(damping_factor / linkCount, 3)
     # print(value)
     for page_ in corpus[page]:
         distribution[page_] += value
     
-    # print(distribution)
-    # print(sum(distribution.values()))
-    assert sum(distribution.values()) == 1.0
+    assert round(sum(distribution.values())) == 1.0
 
     return distribution
 
@@ -93,7 +89,7 @@ def transition_model(corpus, page, damping_factor):
 def sample_pagerank(corpus, damping_factor, n):
     if n < 0: raise RuntimeError
 
-    pageRanks = { page: Decimal("0.0") for page in corpus }
+    pageRanks = { page: 0.0 for page in corpus }
 
     currentSample = random.choice(list(corpus.keys()))
     pageRanks[currentSample] += 1
@@ -106,12 +102,9 @@ def sample_pagerank(corpus, damping_factor, n):
         currentSample = nextPage
 
     for page in pageRanks: # Normalise values
-        pageRanks[page] = Decimal(pageRanks[page] /  n)
+        pageRanks[page] = pageRanks[page] /  n
     
-    print(sum(pageRanks.values()))
-    print(pageRanks)
-
-    assert sum(pageRanks.values()) == Decimal("1.0")
+    assert round(sum(pageRanks.values())) == 1.0
 
     return pageRanks
 
@@ -124,9 +117,9 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    DAMPING_FACTOR = Decimal(str(damping_factor))
+    DAMPING_FACTOR = damping_factor
     pageCount = len(corpus)
-    pageRanks = { page: Decimal(str(1 / pageCount)) for page in corpus }
+    pageRanks = { page: 1 / pageCount for page in corpus }
     previousRanks = copy.deepcopy(pageRanks)
 
     # is only false when the difference between elements in pageRanks and previousRanks are all within 0.001
@@ -141,23 +134,21 @@ def iterate_pagerank(corpus, damping_factor):
                 linkCount = len(corpus[page_])
 
                 if linkCount == 0: # if a page has no links at all
-                    summation += Decimal(str(previousRanks[page_] / pageCount))
+                    summation += previousRanks[page_] / pageCount
                 elif page in corpus[page_]: # Check if page_ links to page if so we include it
-                    summation += Decimal(str(previousRanks[page_] / linkCount))
+                    summation += previousRanks[page_] / linkCount
             
             pageRanks[page] = (1 - DAMPING_FACTOR) / pageCount + DAMPING_FACTOR * summation
 
         significantDifference = False
         for page in corpus:
-            if abs(previousRanks[page] - pageRanks[page]) > Decimal("0.001"):
+            if abs(previousRanks[page] - pageRanks[page]) > 0.001:
                 significantDifference = True
                 break
         
         previousRanks = copy.deepcopy(pageRanks)
 
-    print(sum(pageRanks.values()))
-    print(pageRanks)
-    assert sum(pageRanks.values()) == Decimal("1.0")
+    assert round(sum(pageRanks.values())) == 1.0
 
     return pageRanks
 
